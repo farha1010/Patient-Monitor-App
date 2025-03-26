@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1384</width>
+    <height>858</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="mainCentralWidget">
+   <property name="styleSheet">
+    <string notr="true">background-color:black;</string>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,1">
+    <item>
+     <widget class="QWidget" name="signalDisplay" native="true">
+      <property name="styleSheet">
+       <string notr="true">border: 1px solid white</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,0,0">
+       <item>
+        <layout class="QVBoxLayout" name="ECG" stretch="1,8,2">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="styleSheet">
+            <string notr="true">color:#39FF5E;
+font-weight:bolder;
+font-size:20px;
+padding-left:20px;
+border:none;</string>
+           </property>
+           <property name="text">
+            <string>ECG</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="ecgSignal">
+           <property name="styleSheet">
+            <string notr="true">border:none;</string>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="arrythmiaType">
+           <property name="styleSheet">
+            <string notr="true">color:#39FF5E;
+border:none;
+font-weight:bolder;
+font-size:20px;
+padding-left:20px;
+border-bottom:1px solid white;</string>
+           </property>
+           <property name="text">
+            <string>Arrythmia Dtected :</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="SpO2" stretch="1,8,2">
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="styleSheet">
+            <string notr="true">color:#00B7E2;
+font-weight:bolder;
+font-size:20px;
+padding-left:20px;
+border:none;</string>
+           </property>
+           <property name="text">
+            <string>SpO2</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="spo2Signal">
+           <property name="styleSheet">
+            <string notr="true">border:none;
+</string>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="spo2Alarm">
+           <property name="styleSheet">
+            <string notr="true">color:#00B7E2;
+border:none;
+font-weight:bolder;
+font-size:20px;
+padding-left:20px;
+border-bottom:1px solid white;
+</string>
+           </property>
+           <property name="text">
+            <string>Alarm :</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="RR" stretch="1,8,2">
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="styleSheet">
+            <string notr="true">color:#E8D34B;
+border:none;
+font-weight:bolder;
+font-size:20px;
+padding-left:20px;</string>
+           </property>
+           <property name="text">
+            <string>Respiratory Rate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="rrSignal">
+           <property name="styleSheet">
+            <string notr="true">border:none;
+</string>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="rrAlarm">
+           <property name="styleSheet">
+            <string notr="true">color:#E8D34B;
+border:none;
+font-weight:bolder;
+font-size:20px;
+padding-left:20px;
+border-bottom:1px solid white;
+</string>
+           </property>
+           <property name="text">
+            <string>Alarm :</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="buttons" stretch="1,2,2,2,1">
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="loadSpo2">
+           <property name="styleSheet">
+            <string notr="true">color:white;
+padding:15px;
+
+</string>
+           </property>
+           <property name="text">
+            <string>load ECG</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="laodECG">
+           <property name="styleSheet">
+            <string notr="true">color:white;
+padding:15px;
+
+</string>
+           </property>
+           <property name="text">
+            <string>load spo2</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="load">
+           <property name="styleSheet">
+            <string notr="true">color:white;
+padding:15px;</string>
+           </property>
+           <property name="text">
+            <string>load RR</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="MeasurementsDisplay" native="true">
+      <property name="styleSheet">
+       <string notr="true">border:1px solid white;</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0,0,0,0,0">
+       <item>
+        <layout class="QVBoxLayout" name="heartRateMeasurements" stretch="0,0">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="styleSheet">
+            <string notr="true">color:#39FF5E;
+font-weight:bolder;
+font-size:30px;
+border-bottom:none;
+padding-left:20px;</string>
+           </property>
+           <property name="text">
+            <string>Heart Rate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="HRvalue">
+           <property name="styleSheet">
+            <string notr="true">color:#39FF5E;
+font-weight:bolder;
+font-size:80px;
+border-top:none;
+</string>
+           </property>
+           <property name="text">
+            <string>85</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="bloodPressureMeasurements" stretch="0,0">
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="styleSheet">
+            <string notr="true">color:#FF3B50;
+font-weight:bolder;
+font-size:30px;
+border-bottom:none;
+padding-left:20px;</string>
+           </property>
+           <property name="text">
+            <string>Blood Pressure</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="BPvalue">
+           <property name="styleSheet">
+            <string notr="true">color:#FF3B50;
+font-weight:bolder;
+font-size:80px;
+border-top:none;
+</string>
+           </property>
+           <property name="text">
+            <string>128 / 77</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="spo2Measurements" stretch="0,0">
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="styleSheet">
+            <string notr="true">color:#00B7E2;
+font-weight:bolder;
+font-size:30px;
+border-bottom:none;
+padding-left:20px;</string>
+           </property>
+           <property name="text">
+            <string>SpO₂ %</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="spo2Value">
+           <property name="styleSheet">
+            <string notr="true">color:#00B7E2;
+font-weight:bolder;
+font-size:80px;
+border-top:none;
+</string>
+           </property>
+           <property name="text">
+            <string>98</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="RRmeasurements">
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="styleSheet">
+            <string notr="true">color:#E8D34B;
+font-weight:bolder;
+font-size:30px;
+border-bottom:none;
+padding-left:20px;</string>
+           </property>
+           <property name="text">
+            <string>Respiration</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="RRvalue">
+           <property name="styleSheet">
+            <string notr="true">color:#E8D34B;
+font-weight:bolder;
+font-size:80px;
+border-top:none;
+</string>
+           </property>
+           <property name="text">
+            <string>22</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="temperatureMeasurements">
+         <item>
+          <widget class="QLabel" name="label_10">
+           <property name="styleSheet">
+            <string notr="true">color:#39FF5E;
+font-weight:bolder;
+font-size:30px;
+border-bottom:none;
+padding-left:20px;</string>
+           </property>
+           <property name="text">
+            <string>T °C</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="tempValue">
+           <property name="styleSheet">
+            <string notr="true">color:#39FF5E;
+font-weight:bolder;
+font-size:80px;
+border-top:none;
+</string>
+           </property>
+           <property name="text">
+            <string>37</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
