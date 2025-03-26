@@ -9,10 +9,23 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import sys
+import numpy as np
+import pyqtgraph as pg
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QFileDialog
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_spo2_plot)
+        self.timer.start(1000)  
+        self.spo2_data = []
+        self.spo2_displayed_values = []
+        self.current_index = 0
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1384, 858)
         self.mainCentralWidget = QtWidgets.QWidget(MainWindow)
@@ -35,9 +48,14 @@ class Ui_MainWindow(object):
 "border:none;")
         self.label.setObjectName("label")
         self.ECG.addWidget(self.label)
-        self.ecgSignal = QtWidgets.QLabel(self.signalDisplay)
-        self.ecgSignal.setStyleSheet("border:none;")
-        self.ecgSignal.setObjectName("ecgSignal")
+        self.ecgSignal = pg.PlotWidget()
+        self.ecgSignal.setStyleSheet("border: none;")
+        self.ecgSignal.setFixedHeight(200)
+        self.ecg_curve = self.ecgSignal.plot(pen=pg.mkPen(color=(255, 255, 0), width=2))
+        self.ecgSignal.setBackground('black')  # Set background color
+        self.ecgSignal.showGrid(x=False, y=False)  # Hide grid
+        self.ecgSignal.getAxis("left").setStyle(showValues=False)  # Hide y-axis labels
+        self.ecgSignal.getAxis("bottom").setStyle(showValues=False)  # Hide x-axis labels
         self.ECG.addWidget(self.ecgSignal)
         self.arrythmiaType = QtWidgets.QLabel(self.signalDisplay)
         self.arrythmiaType.setStyleSheet("color:#39FF5E;\n"
@@ -62,7 +80,13 @@ class Ui_MainWindow(object):
 "border:none;")
         self.label_4.setObjectName("label_4")
         self.SpO2.addWidget(self.label_4)
-        self.spo2Signal = QtWidgets.QLabel(self.signalDisplay)
+        self.spo2Signal = pg.PlotWidget()
+        self.spo2Signal.setFixedHeight(200)
+        self.spo2_curve = self.spo2Signal.plot(pen=pg.mkPen(color=(255, 255, 0), width=2))
+        self.spo2Signal.setBackground('black')  # Set background color
+        self.spo2Signal.showGrid(x=False, y=False)  # Hide grid
+        self.spo2Signal.getAxis("left").setStyle(showValues=False)  # Hide y-axis labels
+        self.spo2Signal.getAxis("bottom").setStyle(showValues=False)  # Hide x-axis labels
         self.spo2Signal.setStyleSheet("border:none;\n"
 "")
         self.spo2Signal.setObjectName("spo2Signal")
@@ -91,7 +115,13 @@ class Ui_MainWindow(object):
 "padding-left:20px;")
         self.label_6.setObjectName("label_6")
         self.RR.addWidget(self.label_6)
-        self.rrSignal = QtWidgets.QLabel(self.signalDisplay)
+        self.rrSignal = pg.PlotWidget()
+        self.rrSignal.setFixedHeight(200)
+        self.rr_curve = self.rrSignal.plot(pen=pg.mkPen(color=(255, 255, 0), width=2))
+        self.rrSignal.setBackground('black')  # Set background color
+        self.rrSignal.showGrid(x=False, y=False)  # Hide grid
+        self.rrSignal.getAxis("left").setStyle(showValues=False)  # Hide y-axis labels
+        self.rrSignal.getAxis("bottom").setStyle(showValues=False)  # Hide x-axis labels
         self.rrSignal.setStyleSheet("border:none;\n"
 "")
         self.rrSignal.setObjectName("rrSignal")
@@ -114,13 +144,6 @@ class Ui_MainWindow(object):
         self.buttons.setObjectName("buttons")
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.buttons.addItem(spacerItem)
-        self.loadSpo2 = QtWidgets.QPushButton(self.signalDisplay)
-        self.loadSpo2.setStyleSheet("color:white;\n"
-"padding:15px;\n"
-"\n"
-"")
-        self.loadSpo2.setObjectName("loadSpo2")
-        self.buttons.addWidget(self.loadSpo2)
         self.laodECG = QtWidgets.QPushButton(self.signalDisplay)
         self.laodECG.setStyleSheet("color:white;\n"
 "padding:15px;\n"
@@ -128,6 +151,14 @@ class Ui_MainWindow(object):
 "")
         self.laodECG.setObjectName("laodECG")
         self.buttons.addWidget(self.laodECG)
+        self.loadSpo2 = QtWidgets.QPushButton(self.signalDisplay)
+        self.loadSpo2.clicked.connect(self.load_spo2_data)
+        self.loadSpo2.setStyleSheet("color:white;\n"
+"padding:15px;\n"
+"\n"
+"")
+        self.loadSpo2.setObjectName("loadSpo2")
+        self.buttons.addWidget(self.loadSpo2)
         self.load = QtWidgets.QPushButton(self.signalDisplay)
         self.load.setStyleSheet("color:white;\n"
 "padding:15px;")
@@ -260,16 +291,14 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "ECG"))
-        self.ecgSignal.setText(_translate("MainWindow", "TextLabel"))
         self.arrythmiaType.setText(_translate("MainWindow", "Arrythmia Dtected :"))
         self.label_4.setText(_translate("MainWindow", "SpO2"))
-        self.spo2Signal.setText(_translate("MainWindow", "TextLabel"))
+        # self.spo2Signal.setText(_translate("MainWindow", "TextLabel"))
         self.spo2Alarm.setText(_translate("MainWindow", "Alarm :"))
         self.label_6.setText(_translate("MainWindow", "Respiratory Rate"))
-        self.rrSignal.setText(_translate("MainWindow", "TextLabel"))
         self.rrAlarm.setText(_translate("MainWindow", "Alarm :"))
-        self.loadSpo2.setText(_translate("MainWindow", "load ECG"))
-        self.laodECG.setText(_translate("MainWindow", "load spo2"))
+        self.loadSpo2.setText(_translate("MainWindow", "load Spo2"))
+        self.laodECG.setText(_translate("MainWindow", "load ECG"))
         self.load.setText(_translate("MainWindow", "load RR"))
         self.label_2.setText(_translate("MainWindow", "Heart Rate"))
         self.HRvalue.setText(_translate("MainWindow", "85"))
@@ -281,6 +310,43 @@ class Ui_MainWindow(object):
         self.RRvalue.setText(_translate("MainWindow", "22"))
         self.label_10.setText(_translate("MainWindow", "T °C"))
         self.tempValue.setText(_translate("MainWindow", "37"))
+
+    def load_spo2_data(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(None, "Open Dataset", "", "Text Files (*.txt);;All Files (*)", options=options)
+        if file_name:
+            try:
+                with open(file_name, "r") as file:
+                    self.spo2_data = [float(line.strip()) for line in file.readlines()]
+                self.index = 0  # Reset index after loading new data
+            except Exception as e:
+                print("Error loading dataset:", e)
+    
+    def update_spo2_plot(self):
+        max_points = 500
+        if not self.spo2_data:
+            return
+        
+        if self.index >= len(self.spo2_data):
+            self.index = 0  # Restart if end is reached
+        
+        self.spo2_displayed_values.append(self.spo2_data[self.index])
+        self.index += 1
+        
+        if len(self.spo2_displayed_values) > max_points:
+            self.spo2_displayed_values.pop(0)
+        
+        min_val = min(self.spo2_displayed_values) - 5
+        max_val = max(self.spo2_displayed_values) + 5
+
+        x_min = max(len(self.spo2_displayed_values) - 500,0)
+        x_max = max(len(self.spo2_displayed_values),500)
+        
+        self.spo2Signal.setYRange(min_val, max_val) 
+        self.spo2Signal.setXRange(x_min, x_max)
+        self.spo2Signal.setLimits(xMin = x_min,xMax = x_max,yMin = min_val,yMax = max_val)
+        
+        self.spo2_curve.setData(self.spo2_displayed_values)
 
 
 if __name__ == "__main__":
