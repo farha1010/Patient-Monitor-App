@@ -92,7 +92,7 @@ class Ui_MainWindow(object):
         self.SpO2.addWidget(self.label_4)
         self.spo2Signal = pg.PlotWidget()
         self.spo2Signal.setFixedHeight(200)
-        self.spo2_curve = self.spo2Signal.plot(pen=pg.mkPen(color=(255, 255, 0), width=2))
+        self.spo2_curve = self.spo2Signal.plot(pen=pg.mkPen(color=(0, 183, 226), width=2))
         self.spo2Signal.setBackground('black')  # Set background color
         self.spo2Signal.showGrid(x=False, y=False)  # Hide grid
         self.spo2Signal.getAxis("left").setStyle(showValues=False)  # Hide y-axis labels
@@ -404,7 +404,7 @@ class Ui_MainWindow(object):
         self.spo2Alarm.setStyleSheet(f"color:{alarm_color};border:none;font-weight:bolder;font-size:20px;padding-left:20px;border-bottom:1px solid white;")
         
         # Also update the value color to match alarm status
-        self.spo2Value.setStyleSheet(f"color:{alarm_color};font-weight:bolder;font-size:80px;border-top:none;")
+        self.spo2Value.setStyleSheet("color:#00B7E2;font-weight:bolder;font-size:80px;border-top:none;")
 
 
 
