@@ -20,11 +20,23 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
 
         self.timer = QTimer()
-        self.timer.timeout.connect(self.update_spo2_plot)
-        self.timer.start(1000)  
+        self.timer.timeout.connect(self.update_all_plots)
+        self.timer.start(1000)  # 1Hz update rate
+        
+        # Data initialization
         self.spo2_data = []
         self.spo2_displayed_values = []
         self.current_index = 0
+        self.bp_data = []  # For storing BP values if loaded from file
+        self.use_random_bp = True  # Flag to use random BP values
+        
+        # Alarm thresholds
+        self.spo2_alarm_thresholds = {
+            'critical_low': 85,
+            'low': 90,
+            'high': 100,
+            'critical_high': 105
+        }
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1384, 858)
@@ -322,31 +334,83 @@ class Ui_MainWindow(object):
             except Exception as e:
                 print("Error loading dataset:", e)
     
+    def update_all_plots(self):
+        self.update_spo2_plot()
+        self.update_bp_value()
+    
+    def update_bp_value(self):
+        """Update blood pressure with random values or from loaded data"""
+        if self.use_random_bp:
+            # Generate random but realistic BP values
+            systolic = np.random.randint(125, 130)
+            diastolic = np.random.randint(75, 80)
+            self.BPvalue.setText(f"{systolic} / {diastolic}")
+            
+            # Set color based on BP status
+            if systolic > 140 or diastolic > 90:
+                self.BPvalue.setStyleSheet("color:#FF0000;font-weight:bolder;font-size:80px;border-top:none;")
+            else:
+                self.BPvalue.setStyleSheet("color:#FF3B50;font-weight:bolder;font-size:80px;border-top:none;")
+    
     def update_spo2_plot(self):
         max_points = 500
         if not self.spo2_data:
             return
         
-        if self.index >= len(self.spo2_data):
-            self.index = 0  # Restart if end is reached
+        if self.current_index >= len(self.spo2_data):
+            self.current_index = 0  # Restart if end is reached
         
-        self.spo2_displayed_values.append(self.spo2_data[self.index])
-        self.index += 1
+        current_spo2 = self.spo2_data[self.current_index]
+        self.spo2_displayed_values.append(current_spo2)
+        self.current_index += 1
         
         if len(self.spo2_displayed_values) > max_points:
             self.spo2_displayed_values.pop(0)
         
-        min_val = min(self.spo2_displayed_values) - 5
-        max_val = max(self.spo2_displayed_values) + 5
-
-        x_min = max(len(self.spo2_displayed_values) - 500,0)
-        x_max = max(len(self.spo2_displayed_values),500)
+        # Update plot ranges
+        min_val = min(self.spo2_displayed_values) - 1
+        max_val = max(self.spo2_displayed_values) + 1
+        x_min = max(len(self.spo2_displayed_values) - 500, 0)
+        x_max = max(len(self.spo2_displayed_values), 500)
         
         self.spo2Signal.setYRange(min_val, max_val) 
         self.spo2Signal.setXRange(x_min, x_max)
-        self.spo2Signal.setLimits(xMin = x_min,xMax = x_max,yMin = min_val,yMax = max_val)
+        self.spo2Signal.setLimits(xMin=x_min, xMax=x_max, yMin=min_val, yMax=max_val)
         
+        # Update SpO2 value display
+        self.spo2Value.setText(f"{current_spo2}")
+        
+        # Check for alarms and update display
+        self.check_spo2_alarms(current_spo2)
+        
+        # Update plot
         self.spo2_curve.setData(self.spo2_displayed_values)
+    
+    def check_spo2_alarms(self, spo2_value):
+        """Check SpO2 value against thresholds and display appropriate alarm"""
+        if spo2_value < self.spo2_alarm_thresholds['critical_low']:
+            alarm_text = "CRITICAL ALARM: SpO2 extremely low!"
+            alarm_color = "#FF0000"  # Red
+        elif spo2_value < self.spo2_alarm_thresholds['low']:
+            alarm_text = "WARNING: SpO2 low"
+            alarm_color = "#FFA500"  # Orange
+        elif spo2_value > self.spo2_alarm_thresholds['critical_high']:
+            alarm_text = "CRITICAL ALARM: SpO2 extremely high!"
+            alarm_color = "#FF0000"  # Red
+        elif spo2_value > self.spo2_alarm_thresholds['high']:
+            alarm_text = "WARNING: SpO2 high"
+            alarm_color = "#FFA500"  # Orange
+        else:
+            alarm_text = "Normal"
+            alarm_color = "#00FF00"  # Green
+        
+        # Update alarm display
+        self.spo2Alarm.setText(alarm_text)
+        self.spo2Alarm.setStyleSheet(f"color:{alarm_color};border:none;font-weight:bolder;font-size:20px;padding-left:20px;border-bottom:1px solid white;")
+        
+        # Also update the value color to match alarm status
+        self.spo2Value.setStyleSheet(f"color:{alarm_color};font-weight:bolder;font-size:80px;border-top:none;")
+
 
 
 if __name__ == "__main__":
