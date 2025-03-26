@@ -27,8 +27,6 @@ class Ui_MainWindow(object):
         self.spo2_data = []
         self.spo2_displayed_values = []
         self.current_index = 0
-        self.bp_data = []  # For storing BP values if loaded from file
-        self.use_random_bp = True  # Flag to use random BP values
         
         # Alarm thresholds
         self.spo2_alarm_thresholds = {
@@ -339,18 +337,15 @@ class Ui_MainWindow(object):
         self.update_bp_value()
     
     def update_bp_value(self):
-        """Update blood pressure with random values or from loaded data"""
-        if self.use_random_bp:
-            # Generate random but realistic BP values
-            systolic = np.random.randint(125, 130)
-            diastolic = np.random.randint(75, 80)
-            self.BPvalue.setText(f"{systolic} / {diastolic}")
+        systolic = np.random.randint(125, 130)
+        diastolic = np.random.randint(75, 80)
+        self.BPvalue.setText(f"{systolic} / {diastolic}")
             
             # Set color based on BP status
-            if systolic > 140 or diastolic > 90:
-                self.BPvalue.setStyleSheet("color:#FF0000;font-weight:bolder;font-size:80px;border-top:none;")
-            else:
-                self.BPvalue.setStyleSheet("color:#FF3B50;font-weight:bolder;font-size:80px;border-top:none;")
+        if systolic > 140 or diastolic > 90:
+             self.BPvalue.setStyleSheet("color:#FF0000;font-weight:bolder;font-size:80px;border-top:none;")
+        else:
+             self.BPvalue.setStyleSheet("color:#FF3B50;font-weight:bolder;font-size:80px;border-top:none;")
     
     def update_spo2_plot(self):
         max_points = 500
