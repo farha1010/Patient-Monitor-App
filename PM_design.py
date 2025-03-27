@@ -14,6 +14,11 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QFileDialog
+from scipy import stats, signal
+import pandas as pd
+from matplotlib.animation import FuncAnimation
+from scipy.signal import find_peaks
+import scipy.signal as signal
 
 
 class Ui_MainWindow(object):
@@ -27,6 +32,22 @@ class Ui_MainWindow(object):
         self.spo2_data = []
         self.spo2_displayed_values = []
         self.current_index = 0
+        self.heart_rate = None
+
+        # ECG data initialization
+        self.file_path = None
+        self.ecg_data = []
+        self.time_data = []
+        # Initialize the ECG plot
+        self.ecgSignal = pg.PlotWidget()
+        self.ecg_curve = self.ecgSignal.plot(pen='r')  # Red color for ECG
+
+        self.ecg_data = []  # Store ECG data
+        self.index = 0  # Current position in the signal
+
+        self.timer_ecg = QTimer()
+        self.timer_ecg.timeout.connect(self.update_ECG_plot)
+
         
         # Alarm thresholds
         self.spo2_alarm_thresholds = {
@@ -92,7 +113,7 @@ class Ui_MainWindow(object):
         self.SpO2.addWidget(self.label_4)
         self.spo2Signal = pg.PlotWidget()
         self.spo2Signal.setFixedHeight(200)
-        self.spo2_curve = self.spo2Signal.plot(pen=pg.mkPen(color=(255, 255, 0), width=2))
+        self.spo2_curve = self.spo2Signal.plot(pen=pg.mkPen(color=(0, 183, 226), width=2))
         self.spo2Signal.setBackground('black')  # Set background color
         self.spo2Signal.showGrid(x=False, y=False)  # Hide grid
         self.spo2Signal.getAxis("left").setStyle(showValues=False)  # Hide y-axis labels
@@ -155,6 +176,7 @@ class Ui_MainWindow(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.buttons.addItem(spacerItem)
         self.laodECG = QtWidgets.QPushButton(self.signalDisplay)
+        self.laodECG.clicked.connect(self.open_file_dialog)
         self.laodECG.setStyleSheet("color:white;\n"
 "padding:15px;\n"
 "\n"
@@ -335,6 +357,7 @@ class Ui_MainWindow(object):
     def update_all_plots(self):
         self.update_spo2_plot()
         self.update_bp_value()
+        # self.update_ECG_plot()
     
     def update_bp_value(self):
         systolic = np.random.randint(125, 130)
@@ -404,7 +427,172 @@ class Ui_MainWindow(object):
         self.spo2Alarm.setStyleSheet(f"color:{alarm_color};border:none;font-weight:bolder;font-size:20px;padding-left:20px;border-bottom:1px solid white;")
         
         # Also update the value color to match alarm status
-        self.spo2Value.setStyleSheet(f"color:{alarm_color};font-weight:bolder;font-size:80px;border-top:none;")
+        self.spo2Value.setStyleSheet("color:#00B7E2;font-weight:bolder;font-size:80px;border-top:none;")
+
+    def open_file_dialog(self):
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open ECG File", "", "CSV Files (*.csv);;Text Files (*.txt);;All Files (*)", options=options)
+        if file_path:
+                self.file_path = file_path
+                self.load_ECG_data()
+
+    def load_ECG_data(self):
+        """Load ECG data from a CSV file with headers."""
+        if not self.file_path:
+                print("Error: No file selected.")
+                return
+        try:
+                df = pd.read_csv(self.file_path)  # Load CSV into Pandas DataFrame
+                self.time_data = df['Time'].values  # Extract time column
+                self.ecg_data = df['Amplitude'].values  # Extract ECG signal column
+                self.index = 0  # Reset position
+                self.extract_features(self.file_path)
+                self.timer_ecg.start(50)  # Start updating every 50ms
+
+        except Exception as e:
+                print("Error loading ECG file:", e)
+
+
+    def extract_features(self, file_path):
+        try:
+
+            df = pd.read_csv(file_path)
+            self.time_data = df['Time'].values
+            self.ecg_data = df['Amplitude'].values
+            fs = 1 / (self.time_data[1] - self.time_data[0])  # Sampling rate
+
+            # Frequency-Domain Features
+            freqs, psd = signal.welch(self.ecg_data, fs, nperseg=1024)
+            spectral_entropy = stats.entropy(psd + 1e-10)
+            dominant_freq = freqs[np.argmax(psd)]
+            spectral_centroid = np.sum(freqs * psd) / np.sum(psd)
+            rolloff_85 = freqs[np.where(np.cumsum(psd) >= 0.85 * np.sum(psd))[0][0]]
+            rolloff_95 = freqs[np.where(np.cumsum(psd) >= 0.95 * np.sum(psd))[0][0]]
+            
+            # Time-Domain Features
+            mean = np.mean(self.ecg_data)
+            variance = np.var(self.ecg_data)
+            std = np.std(self.ecg_data)
+            skew = stats.skew(self.ecg_data)
+            kurtosis = stats.kurtosis(self.ecg_data)
+            rms = np.sqrt(np.mean(self.ecg_data**2))
+            zcr = np.sum(np.diff(np.sign(self.ecg_data)) != 0) / len(self.ecg_data)
+            
+            # Arrhythmia Classification
+            classification = self.classify_arrhythmia(dominant_freq, spectral_entropy, zcr, kurtosis, skew, rolloff_85, rolloff_95, spectral_centroid)
+            arrhythmia_result = (classification)
+            
+            # Display Features and Arrhythmia Classification
+            features_str = (
+                "=== Time-Domain Features ===\n"
+                f"Mean: {mean:.4f}\nVariance: {variance:.4f}\nStd Dev: {std:.4f}\n"
+                f"Skewness: {skew:.4f}\nKurtosis: {kurtosis:.4f}\nRMS: {rms:.4f}\nZero-Crossing Rate: {zcr:.4f}\n\n"
+                "=== Frequency-Domain Features ===\n"
+                f"Spectral Entropy: {spectral_entropy:.4f}\nDominant Frequency: {dominant_freq:.4f} Hz\n"
+                f"Spectral Centroid: {spectral_centroid:.4f} Hz\n"
+                f"Spectral Rolloff (85%): {rolloff_85:.4f} Hz\nSpectral Rolloff (95%): {rolloff_95:.4f} Hz\n\n"
+                "=== Arrhythmia Classification ===\n"
+                f"{arrhythmia_result}"
+            )
+            alarm_color = "#00FF00"  # Green
+            self.arrythmiaType.setText(f"Arrhythmia Detected: {arrhythmia_result}")
+            self.arrythmiaType.setStyleSheet(f"color:{alarm_color};border:none;font-weight:bolder;font-size:20px;padding-left:20px;border-bottom:1px solid white;")
+
+
+        except Exception as e:
+            pass
+        
+
+    def update_ECG_plot(self):
+        """Update the ECG signal dynamically with instant heart rate feedback"""
+        if not hasattr(self, 'ecg_data') or len(self.ecg_data) == 0:
+                return
+
+        # Calculate sampling rate if not already set
+        if not hasattr(self, 'fs'):
+                if len(self.time_data) > 1:
+                        self.fs = 1 / (self.time_data[1] - self.time_data[0])
+                else:
+                        self.fs = 250  # default sampling rate
+
+        # Always show the complete signal up to current index
+        x = np.arange(self.index + 1)
+        y = self.ecg_data[:self.index + 1]
+        self.ecg_curve.setData(x, y)
+
+        # Calculate heart rate on sliding window (last 2 seconds of data)
+        window_size = int(2 * self.fs)  # 2 second window
+        if self.index >= window_size:
+                current_window = y[-window_size:]
+                heart_rate = self.calculate_heart_rate(current_window, self.fs)
+                
+                # Display heart rate immediately when first calculation is available
+                if heart_rate is not None and heart_rate > 0:
+                        self.HRvalue.setText(f"{heart_rate:.0f}")
+                        # Color coding
+                        if heart_rate > 100:
+                                self.HRvalue.setStyleSheet("color: red; font-size: 24px;")
+                        elif heart_rate < 60:
+                                self.HRvalue.setStyleSheet("color: yellow; font-size: 24px;")
+                        else:
+                                self.HRvalue.setStyleSheet("color: green; font-size: 24px;")
+                else:
+                        self.HRvalue.setText("--")  # Show placeholder when no valid HR
+        
+        # For first 2 seconds, show "Calculating..." message
+        elif self.index > 0:
+                self.HRvalue.setText("Calculating...")
+                self.HRvalue.setStyleSheet("color: white; font-size: 24px;")
+
+        self.index += 1
+
+        # Stop when we reach the end
+        if self.index >= len(self.ecg_data):
+                self.timer_ecg.stop()
+
+    def calculate_heart_rate(self,ecg_signal, time_data):
+        """Calculate heart rate (BPM) from an ECG signal."""
+        if len(ecg_signal) < 2:
+                return None  # Not enough data to process
+
+        # Sampling rate calculation
+        fs = 1 / (self.time_data[1] - self.time_data[0])  # Sampling frequency (Hz)
+
+        # Detect R-peaks using find_peaks
+        peaks, _ = signal.find_peaks(ecg_signal, height=np.mean(ecg_signal) + np.std(ecg_signal), distance=fs*0.6)  
+        # distance=fs*0.6 ensures we detect R-peaks at least 0.6 sec apart
+
+        if len(peaks) < 2:
+                return self.heart_rate  # Not enough peaks to determine heart rate
+
+        # Calculate RR intervals (time between consecutive R-peaks)
+        rr_intervals = np.diff(self.time_data[peaks])  # Time differences between R-peaks
+
+        # Convert RR intervals to heart rate (BPM)
+        heart_rates = 60 / rr_intervals  # BPM calculation for each interval
+        avg_heart_rate = np.mean(heart_rates)  # Average HR
+
+        self.heart_rate = avg_heart_rate
+
+        return avg_heart_rate
+
+
+        # Arrhythmia Classification Function
+    def classify_arrhythmia(self,dominant_freq, spectral_entropy, zcr, kurtosis, skewness, rolloff_85, rolloff_95, spectral_centroid): 
+        classification = []
+        if dominant_freq < 2.6:
+                classification.append("Bradycardia")
+        if 1.3 <= dominant_freq <= 2.2 and spectral_entropy > 4.0 and zcr > 0.10:
+                classification.append("Atrial Flutter")
+        if 1.8 <= dominant_freq <= 2.6 and spectral_entropy < 3.5 and zcr < 0.05 and kurtosis > 8:
+                classification.append("Atrial Fibrillation")
+        if zcr < 0.05:
+                classification.append("Very Stable Rhythm")
+        elif 0.05 <= zcr < 0.15:
+                classification.append("Moderately Irregular")
+        else:
+                classification.append("Possible AFib")
+        return classification
 
 
 
